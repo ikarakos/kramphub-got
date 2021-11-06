@@ -3,16 +3,13 @@ import axios from 'axios';
 import BootstraTable from 'react-bootstrap-table-next';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.css';
-import paginationFactory from 'react-bootstrap-table2-paginator';
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
-import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import 'react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css';
 
 const DataList = () => {
   const [heroesList, setHeroesList] = useState([]);
-
-  const pageNo = 1;
-  const pageSize = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const columns = [
     { dataField: 'name', text: 'Name', sort: true, filter: textFilter() },
@@ -22,38 +19,29 @@ const DataList = () => {
     { dataField: 'died', text: 'Died', sort: true },
     { dataField: 'titles', text: 'Titles' },
     { dataField: 'aliases', text: 'Aliases', sort: true, filter: textFilter() },
+    {
+      dataField: 'estimated_age',
+      text: 'Age',
+      sort: true,
+    },
   ];
 
-  const fetchChars = async (pageNo, pageSize) => {
-    return await axios
+  const fetchChars = async (page, size) => {
+    const res = await axios
       .get(
-        `https://anapioficeandfire.com/api/characters?page=${pageNo}&pageSize=${pageSize}`
+        `https://anapioficeandfire.com/api/characters?page=${page}&pageSize=${size}`
       )
-      .then((res) => setHeroesList(res.data))
+      .then((res) => {
+        setHeroesList(res.data);
+        if (page !== currentPage) setCurrentPage(page);
+        if (size !== pageSize) setPageSize(size);
+      })
       .catch((err) => console.log(err));
+    return res;
   };
 
-  const pagination = paginationFactory({
-    page: pageNo,
-    sizePerPage: pageSize,
-    lastPageText: '>>',
-    firstPageText: '<<',
-    nextPageText: 'next',
-    prePageText: 'prev',
-    showTotal: true,
-    alwaysShowAllBtns: true,
-    onPageChange: (page, sizePerPage) => {
-      console.log('page: ', page);
-      console.log('sizePerPage: ', sizePerPage);
-    },
-    onSizePerPageChange: (page, sizePerPage) => {
-      console.log('page: ', page);
-      console.log('sizePerPage: ', sizePerPage);
-    },
-  });
-
   useEffect(() => {
-    fetchChars();
+    fetchChars(1, 10);
   }, []);
 
   return (
@@ -63,9 +51,24 @@ const DataList = () => {
         keyField='url'
         columns={columns}
         data={heroesList}
-        pagination={pagination}
         filter={filterFactory()}
       />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <button onClick={() => fetchChars(1, 10)}>first</button>
+
+        <button onClick={() => fetchChars(currentPage - 1, pageSize)}>
+          prev
+        </button>
+        <button onClick={() => fetchChars(currentPage + 1, pageSize)}>
+          next
+        </button>
+        <button onClick={() => fetchChars(214, pageSize)}>Last</button>
+      </div>
     </div>
   );
 };
