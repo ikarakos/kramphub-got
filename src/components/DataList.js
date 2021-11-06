@@ -8,6 +8,7 @@ import 'react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css
 
 const DataList = () => {
   const [heroesList, setHeroesList] = useState([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -20,28 +21,30 @@ const DataList = () => {
     { dataField: 'titles', text: 'Titles' },
     { dataField: 'aliases', text: 'Aliases', sort: true, filter: textFilter() },
     {
-      dataField: 'estimated_age',
+      dataField: 'age',
       text: 'Age',
       sort: true,
     },
   ];
 
   const fetchChars = async (page, size) => {
-    const res = await axios
-      .get(
-        `https://anapioficeandfire.com/api/characters?page=${page}&pageSize=${size}`
-      )
-      .then((res) => {
-        setHeroesList(res.data);
-        if (page !== currentPage) setCurrentPage(page);
-        if (size !== pageSize) setPageSize(size);
-      })
-      .catch((err) => console.log(err));
-    return res;
+    if (page < 1 || page > 214) return;
+    const URL = `https://anapioficeandfire.com/api/characters?page=${page}&pageSize=${size}`;
+    if (page !== currentPage) setCurrentPage(page);
+    if (size !== pageSize) setPageSize(size);
+    localStorage.getItem(`${page}`)
+      ? setHeroesList(JSON.parse(localStorage.getItem(`${page}`)))
+      : await axios
+          .get(URL)
+          .then((res) => {
+            setHeroesList(res.data);
+            localStorage.setItem(`${page}`, JSON.stringify(res.data));
+          })
+          .catch((err) => console.warn(err));
   };
 
   useEffect(() => {
-    fetchChars(1, 10);
+    fetchChars(currentPage, pageSize);
   }, []);
 
   return (
@@ -59,11 +62,14 @@ const DataList = () => {
           justifyContent: 'center',
         }}
       >
-        <button onClick={() => fetchChars(1, 10)}>first</button>
+        <button onClick={() => fetchChars(1, pageSize)}>first</button>
 
         <button onClick={() => fetchChars(currentPage - 1, pageSize)}>
           prev
         </button>
+        <div style={{ marginLeft: '2rem', marginRight: '2rem' }}>
+          Page: {currentPage}
+        </div>
         <button onClick={() => fetchChars(currentPage + 1, pageSize)}>
           next
         </button>
