@@ -8,9 +8,9 @@ import 'react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css
 
 const DataList = () => {
   const [heroesList, setHeroesList] = useState([]);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [age, setAge] = useState();
 
   const columns = [
     { dataField: 'name', text: 'Name', sort: true, filter: textFilter() },
@@ -23,9 +23,29 @@ const DataList = () => {
     {
       dataField: 'age',
       text: 'Age',
-      sort: true,
+      formatter: (e, row) =>
+        row.name && (
+          <div>
+            <button onClick={() => handleEstimateAge(row.name)}>
+              Calculate age
+            </button>
+            <div>{age ? `Estimated age: ${row.name} is ${age}` : null}</div>
+          </div>
+        ),
     },
   ];
+
+  const handleEstimateAge = async (name) => {
+    // await axios
+    //   .get(`https://api.agify.io?name=${name}`)
+    //   .then((res) => res.data.age);
+    setAge(5);
+  };
+  const rowEvents = {
+    onClick: (e, row) => {
+      console.log(row.name);
+    },
+  };
 
   const fetchChars = async (page, size) => {
     if (page < 1 || page > 214) return;
@@ -55,6 +75,7 @@ const DataList = () => {
         columns={columns}
         data={heroesList}
         filter={filterFactory()}
+        rowEvents={rowEvents}
       />
       <div
         style={{
