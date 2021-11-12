@@ -21,29 +21,52 @@ const DataList = () => {
     { dataField: 'titles', text: 'Titles' },
     { dataField: 'aliases', text: 'Aliases', sort: true, filter: textFilter() },
     {
-      dataField: 'age',
-      text: 'Age',
+      dataField: 'button',
+      text: 'Button',
       formatter: (e, row) =>
         row.name && (
           <div>
             <button onClick={() => handleEstimateAge(row.name)}>
               Calculate age
             </button>
+          </div>
+        ),
+      formatExtraData: age,
+    },
+    {
+      dataField: 'age',
+      text: 'Age',
+      formatter: (e, row) =>
+        row.name && (
+          <div>
             <div>{age ? `Estimated age: ${row.name} is ${age}` : null}</div>
           </div>
         ),
+      formatExtraData: age,
     },
   ];
 
   const handleEstimateAge = async (name) => {
-    // await axios
-    //   .get(`https://api.agify.io?name=${name}`)
-    //   .then((res) => res.data.age);
-    setAge(5);
+    await axios
+      .get(`https://api.agify.io?name=${name}`)
+      .then((res) => console.log(res.data.age));
   };
   const rowEvents = {
     onClick: (e, row) => {
       console.log(row.name);
+    },
+  };
+
+  const expandRow = {
+    renderer: (e, row) => (
+      <div>
+        <div>{age ? `Estimated age:  ${age}` : null}</div>
+      </div>
+    ),
+    onExpand: (e, row) => {
+      axios
+        .get(`https://api.agify.io?name=${row.name}`)
+        .then((res) => setAge(res.data.age));
     },
   };
 
@@ -76,6 +99,7 @@ const DataList = () => {
         data={heroesList}
         filter={filterFactory()}
         rowEvents={rowEvents}
+        expandRow={expandRow}
       />
       <div
         style={{
